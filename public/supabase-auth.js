@@ -23,17 +23,12 @@
     var err = new Error(code); err.code = code; throw err;
   }
 
-  /* Return the app state: {user:{id, name, email, kind:'user', poo, best}, rooms:[], notifications:[], pushGoal, serverTime}.
-     Replace with your own query (profiles table, rooms, ...). */
+  /* Return the app state ({user, rooms, notifications, ...}) from the poo_api() function in the database.
+     It also creates the profile with the nickname given at sign-up. */
   function loadState(session){
-    var u = session.user;
-    return sb.from('profiles').select('*').eq('id', u.id).single().then(function(r){
-      var p = r.data || {};
-      return {
-        user:{id:u.id, name:p.nickname || (u.user_metadata && u.user_metadata.name) || '', email:u.email, kind:'user',
-              poo:p.poo || {shape:'classic', thick:1, hat:'beanie'}, best:p.best || 0},
-        rooms:[], notifications:[], pushGoal:30, serverTime:Date.now()
-      };
+    return sb.rpc('poo_api', {p_method:'GET', p_path:'/api/state', p_body:{}}).then(function(r){
+      if(r.error || !r.data || r.data.error){ console.error('state', r.error || r.data); var e = new Error('server'); e.code = 'server'; throw e; }
+      return r.data;
     });
   }
 

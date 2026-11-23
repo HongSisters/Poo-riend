@@ -4112,7 +4112,7 @@ function sheetJoin(){
     +   '<button class="btn ink" type="submit">' + t('add.join') + '</button>'
     + '</div></form>';
 }
-function inviteLink(r){ return location.origin + '/?join=' + encodeURIComponent(r.code); }
+function inviteLink(r){ return location.origin + location.pathname + '?join=' + encodeURIComponent(r.code); }
 function sheetInvite(){
   var r = getRoom(sheet.roomId);
   if(!r) return sheetHead(t('inv.title'));
@@ -5221,36 +5221,7 @@ document.addEventListener('submit', function(e){
     var inp = document.getElementById('me-name');
     var name = inp ? inp.value.trim() : '';
     if(!name){ setSheetErr(t('err.bad_name')); return; }
-    
-    if (!window.sb) {
-      setSheetErr('Supabase 연결을 확인해 주세요.');
-      return;
-    }
-
-    window.sb.auth.getUser()
-      .then(function(result) {
-        if (result.error || !result.data.user) {
-          throw new Error('로그인이 필요합니다.');
-        }
-
-        return window.sb
-          .from('profiles')
-          .upsert({
-            id: result.data.user.id,
-            nickname: name
-          }, { onConflict: 'id' });
-      })
-      .then(function(result) {
-        if (result.error) throw result.error;
-
-        state.user.name = name;
-        closeSheet();
-        render();
-        toast(t('toast.renamed'));
-      })
-      .catch(function(error) {
-        setSheetErr(error.message || '닉네임 저장 실패');
-      });
+    api('PUT', '/api/me/name', {name:name}).then(function(){ closeSheet(); return refresh(); }, function(er){ setSheetErr(errText(er)); });
 
   }
 });
