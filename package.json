@@ -1,0 +1,10 @@
+{
+  "name": "poo-riend",
+  "version": "7.0.0",
+  "private": true,
+  "description": "Poo-riend · 친구 똥 현황 실시간 공유 (서버판)",
+  "main": "server.js",
+  "scripts": { "start": "node server.js", "dev": "node --watch server.js" },
+  "engines": { "node": ">=22.13" },
+  "license": "UNLICENSED"
+}
