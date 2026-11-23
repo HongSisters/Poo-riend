@@ -30,7 +30,7 @@
     return sb.from('profiles').select('*').eq('id', u.id).single().then(function(r){
       var p = r.data || {};
       return {
-        user:{id:u.id, name:p.name || (u.user_metadata && u.user_metadata.name) || '', email:u.email, kind:'user',
+        user:{id:u.id, name:p.nickname || (u.user_metadata && u.user_metadata.name) || '', email:u.email, kind:'user',
               poo:p.poo || {shape:'classic', thick:1, hat:'beanie'}, best:p.best || 0},
         rooms:[], notifications:[], pushGoal:30, serverTime:Date.now()
       };
