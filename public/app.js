@@ -2602,6 +2602,19 @@ HAT_BOOST = {bunny:[1.15, -6], propeller:[1.22, -2], grad:[1.22, -6], cowboy:[1.
         'settings.email':'邮箱'}
   };
   for(var l in L) for(var k in L[l]) I18N[l][k] = L[l][k];
+  var M = {
+    ko:{'auth.sentH':'메일함을 확인해 주세요', 'auth.sentB':'{email}로 인증 메일을 보냈어요. 메일 속 링크를 누르면 바로 로그인돼요.',
+        'auth.resend':'메일 다시 보내기', 'auth.resent':'다시 보냈어요.', 'auth.back':'로그인 화면으로'},
+    en:{'auth.sentH':'Check your inbox', 'auth.sentB':'We sent a link to {email}. Tap it and you are in.',
+        'auth.resend':'Send again', 'auth.resent':'Sent again.', 'auth.back':'Back to log in'},
+    ja:{'auth.sentH':'メールを確認してください', 'auth.sentB':'{email} に認証メールを送りました。リンクを押すとそのままログインします。',
+        'auth.resend':'もう一度送る', 'auth.resent':'送り直しました。', 'auth.back':'ログイン画面へ'},
+    zh:{'auth.sentH':'请查看邮箱', 'auth.sentB':'验证邮件已发送到 {email}，点击邮件中的链接即可直接登录。',
+        'auth.resend':'重新发送', 'auth.resent':'已重新发送。', 'auth.back':'返回登录'}
+  };
+  for(var l2 in M) for(var k2 in M[l2]) I18N[l2][k2] = M[l2][k2];
+  I18N.ko['tab.friends'] = '똥친'; I18N.ko['friends.title'] = '나의 똥 친구';
+  I18N.ko['tab.mypoo'] = '똥꾸'; I18N.ko['mypoo.title'] = '내 똥 꾸미기';
 })();
 /* ===================== hand: stroke lettering ===================== */
 /* a marker writing letters as single strokes, so titles look drawn, not typed */
@@ -2995,7 +3008,7 @@ var state = {
   tab:'home',
   roomId:null,
   rooms:[],
-  myPoo:{shape:'classic', thick:1, hat:'beanie'},
+  myPoo:{shape:'classic', thick:1, hat:'none'},
   notifications:[],
   prefs:{autoLogout:'0'},
   best:0,
@@ -3311,13 +3324,13 @@ function viewMyPoo(){
   } else if(pooTab === 'thick'){
     THICKS.forEach(function(x, i){ grid += ocard('thick', i, cfg.thick === i, pooSVG({shape:cfg.shape, thick:i}, KK_H, {kk:true}), t('thick.' + i)); });
   } else if(pooTab === 'hat'){
-    HATS.forEach(function(h){ grid += ocard('hat', h.id, cfg.hat === h.id, (h.id === 'none' ? '<span class="oc-none">' + iconNone() + '</span>' : '<span class="oc-item">' + itemSVG('hat', h.id, cfg) + '</span>'), h.id === 'none' ? t('mypoo.none') : t(h.name), h.isNew); });
+    HATS.forEach(function(h, i){ grid += ocard('hat', h.id, cfg.hat === h.id, (h.id === 'none' ? '<span class="oc-none">' + iconNone() + '</span>' : '<span class="oc-item">' + itemSVG('hat', h.id, cfg) + '</span>'), h.id === 'none' ? t('mypoo.none') : t(h.name), i >= HATS.length - 5); });
   } else if(pooTab === 'acc'){
-    ACCS.forEach(function(a){ grid += ocard('acc', a, (cfg.acc || 'none') === a, (a === 'none' ? '<span class="oc-none">' + iconNone() + '</span>' : '<span class="oc-item">' + itemSVG('acc', a, cfg) + '</span>'), t('acc.' + a)); });
+    ACCS.forEach(function(a, i){ grid += ocard('acc', a, (cfg.acc || 'none') === a, (a === 'none' ? '<span class="oc-none">' + iconNone() + '</span>' : '<span class="oc-item">' + itemSVG('acc', a, cfg) + '</span>'), t('acc.' + a), i >= ACCS.length - 5); });
   } else if(pooTab === 'toilet'){
-    TOILETS.forEach(function(w){ grid += ocard('toilet', w, (cfg.toilet || 'basic') === w, '<span class="oc-wc">' + iconWC(w) + '</span>', t('wc.' + w)); });
+    TOILETS.forEach(function(w, i){ grid += ocard('toilet', w, (cfg.toilet || 'basic') === w, '<span class="oc-wc">' + iconWC(w) + '</span>', t('wc.' + w), i >= TOILETS.length - 5); });
   } else {
-    PROPS.forEach(function(p){ grid += ocard('prop', p, (cfg.prop || 'none') === p, p === 'none' ? '<span class="oc-none">' + iconNone() + '</span>' : '<span class="oc-prop">' + iconProp(p) + '</span>', t('prop.' + p)); });
+    PROPS.forEach(function(p, i){ grid += ocard('prop', p, (cfg.prop || 'none') === p, p === 'none' ? '<span class="oc-none">' + iconNone() + '</span>' : '<span class="oc-prop">' + iconProp(p) + '</span>', t('prop.' + p), i >= PROPS.length - 5); });
   }
   var tabs = KK_TABS[kkSec].map(function(k){
     return '<button class="' + (pooTab === k ? 'on' : '') + '" data-action="pooTab" data-tab="' + k + '">' + t('mypoo.' + k) + '</button>';
@@ -3476,7 +3489,32 @@ function knock(userId, el){
   api('POST', '/api/rooms/' + r.id + '/knock', {userId:userId, msg:msg}).then(scheduleSync, function(){});
 }
 
+var sentEmail = '', sentPoll = null;
+function viewAuthSent(){
+  return '<div class="auth">'
+    + '<div class="auth-mark">' + pooSVG({shape:'classic', thick:1}, 104) + '</div>'
+    + '<h1 class="auth-title"><span class="auth-wm">Poo-riend</span></h1>'
+    + '<p class="auth-tag">' + t('auth.tagline') + '</p>'
+    + '<div class="auth-form auth-sent">'
+    +   '<p class="sent-h">' + t('auth.sentH') + '</p>'
+    +   '<p class="sent-b">' + t('auth.sentB', {email:'<b>' + esc(sentEmail) + '</b>'}) + '</p>'
+    +   '<p class="err" id="auth-err" aria-live="polite"></p>'
+    +   '<button class="btn ink wide" type="button" data-action="resendMail">' + t('auth.resend') + '</button>'
+    +   '<button class="btn ghost wide" type="button" data-action="authBack">' + t('auth.back') + '</button>'
+    + '</div></div>';
+}
+/* waiting for the mail link: once it is opened (here or in another tab) the session appears and we go straight in */
+function startSentPoll(){
+  if(sentPoll) clearInterval(sentPoll);
+  sentPoll = setInterval(function(){
+    if(authMode !== 'sent' || state.user){ clearInterval(sentPoll); sentPoll = null; return; }
+    api('GET', '/api/state').then(function(s){
+      if(s && s.user){ clearInterval(sentPoll); sentPoll = null; authMode = 'login'; afterLogin(s, true); }
+    }, function(){});
+  }, 3000);
+}
 function viewAuth(){
+  if(authMode === 'sent') return viewAuthSent();
   var su = authMode === 'signup';
   return '<div class="auth">'
     + '<div class="auth-mark">' + pooSVG({shape:'classic', thick:1}, 104) + '</div>'
@@ -4351,7 +4389,7 @@ function afterLogin(s, greet){
 function authCall(kind, body){
   var B = window.POO_AUTH;
   if(B && typeof B[kind] === 'function') return B[kind](body);
-  var url = {signUp:'/api/signup', signIn:'/api/login', resetPassword:'/api/reset'}[kind];
+  var url = {signUp:'/api/signup', signIn:'/api/login', resetPassword:'/api/reset', resend:'/api/resend'}[kind];
   return api('POST', url, body);
 }
 var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -4374,9 +4412,8 @@ function submitAuth(){
   authCall(su ? 'signUp' : 'signIn', body).then(function(s){
     if(s && s.needsConfirm){
       busy(btn, false);
-      authMode = 'login'; render();
-      var fe = document.getElementById('f-email'); if(fe) fe.value = email;
-      var er = document.getElementById('auth-err'); if(er){ er.textContent = t('auth.checkMail'); er.classList.add('ok'); }
+      sentEmail = email; authMode = 'sent'; render();
+      startSentPoll();
       return;
     }
     afterLogin(s, true);
@@ -4601,6 +4638,18 @@ function handleAction(a, el){
       break;
     }
     case 'forgotPw': forgotPw(); break;
+    case 'authBack': authMode = 'login'; render(); {
+      var fe2 = document.getElementById('f-email'); if(fe2) fe2.value = sentEmail;
+    } break;
+    case 'resendMail': {
+      var er2 = document.getElementById('auth-err');
+      busy(el, true);
+      authCall('resend', {email:sentEmail}).then(function(){
+        busy(el, false);
+        if(er2){ er2.textContent = t('auth.resent'); er2.classList.add('ok'); }
+      }, function(e){ busy(el, false); if(er2){ er2.classList.remove('ok'); er2.textContent = errText(e); } });
+      break;
+    }
     case 'tab':
       kkDraft = null;
       state.tab = el.getAttribute('data-tab');

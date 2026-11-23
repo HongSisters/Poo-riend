@@ -1607,6 +1607,14 @@ svg.tp-svg{--pu:2.6;}
 /* email login: forgot-password link + success note */
 .auth-forgot{display:block; margin:6px 2px 0 auto; font-family:var(--hand); font-size:12px; color:var(--muted); text-decoration:underline; text-underline-offset:3px; background:none; border:0; padding:2px 0; cursor:pointer;}
 .auth .err.ok{color:var(--ink);}
+/* sign-up mail sent: message instead of the form */
+.auth-sent .sent-h{font-size:clamp(17px, 2.5dvh, 21px); color:var(--ink); text-align:center; margin:4px 0 8px;}
+.auth-sent .sent-b{font-size:clamp(12.5px, 1.8dvh, 14.5px); color:var(--muted); text-align:center; line-height:1.55; word-break:keep-all; margin:0 4px;}
+.auth-sent .sent-b b{color:var(--ink); word-break:break-all;}
+.auth-sent .err{text-align:center;}
+/* NEW badge: solid black, white letters (the drawn outline is not used) */
+.ocard .badge{background:var(--ink) !important; color:var(--bg) !important; border-radius:9px !important; padding:2px 6px 1px !important; font-size:8.6px; letter-spacing:.4px;}
+.ocard .badge > .skf{display:none !important;}
 </style>
 </head>
 <body>

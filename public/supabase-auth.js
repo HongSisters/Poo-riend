@@ -49,6 +49,12 @@
         return loadState(r.data.session);
       });
     },
+    resend: function(b){
+      return sb.auth.resend({type:'signup', email:b.email, options:{emailRedirectTo:location.origin + location.pathname}}).then(function(r){
+        if(r.error) fail(r.error);
+        return {ok:true};
+      });
+    },
     resetPassword: function(b){
       return sb.auth.resetPasswordForEmail(b.email, {redirectTo:location.origin + location.pathname}).then(function(r){
         if(r.error) fail(r.error);
