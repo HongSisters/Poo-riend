@@ -3495,7 +3495,6 @@ function viewAuth(){
     +   '<p class="err" id="auth-err" aria-live="polite"></p>'
     +   '<button class="btn ink wide" type="submit" id="auth-go">' + (su ? t('auth.signup') : t('auth.login')) + '</button>'
     +   '<button class="btn ghost wide" type="button" data-action="authSwitch">' + (su ? t('auth.toLogin') : t('auth.toSignup')) + '</button>'
-    +   '<button class="btn ghost wide" type="button" data-action="demo">' + t('auth.demo') + '</button>'
     +   '<p class="foot">' + t('auth.notice') + '</p>'
     +   '<div class="auth-langs">' + LANGS.map(function(L){
           return '<button type="button" data-action="lang" data-lang="' + L.code + '" class="' + (state.lang === L.code ? 'on' : '') + '">' + L.label + '</button>';
@@ -3721,7 +3720,6 @@ function viewFriends(){
 
 function viewSettings(){
   var u = state.user || {email:'', name:'-'};
-  var guest = u.kind === 'guest';
   var https = location.protocol === 'https:';
   var langs = LANGS.map(function(L){
     return '<button data-action="lang" data-lang="' + L.code + '" class="' + (state.lang === L.code ? 'on' : '') + '">' + L.label + '</button>';
@@ -3736,7 +3734,7 @@ function viewSettings(){
     + '<div class="set-sec"><p class="h">' + t('settings.account') + '</p><section class="card" style="padding:0">'
     +   '<div class="row"><div class="lbl"><span>' + t('settings.nick') + '</span><b>' + esc(u.name || '-') + '</b></div>'
     +     '<button class="btn sm ghost" data-action="renameMe">' + t('settings.rename') + '</button></div>'
-    +   '<div class="row"><div class="lbl"><span>' + t('settings.email') + '</span></div><div class="val">' + (guest ? t('settings.guest') : esc(u.email || u.handle || '-')) + '</div></div>'
+    +   '<div class="row"><div class="lbl"><span>' + t('settings.email') + '</span></div><div class="val">' + esc(u.email || '-') + '</div></div>'
     + '</section></div>'
     + '<div class="set-sec"><p class="h">' + t('settings.display') + '</p><section class="card" style="padding:0">'
     +   '<div class="row"><div class="lbl"><b>' + t('settings.myPoo') + '</b><span>' + t('mypoo.lede') + '</span></div>'
@@ -4347,18 +4345,6 @@ function afterLogin(s, greet){
   if(greet) toast(t('toast.entered', {name:esc(state.user.name)}));
   if(pendingJoin){ var c = pendingJoin; pendingJoin = null; joinByCode(c); }
 }
-function demoLogin(el){
-  busy(el, true);
-  var pools = {ko:['홍똥'], en:['Alex','Sam','Jamie','Robin','Chris'], ja:['ユウト','ハルカ','ソウタ','ミオ'], zh:['子涵','浩然','雨桐','思远']};
-  var pool = pools[state.lang] || pools.ko;
-  var rooms = {ko:['회사 화장실', '가속기 3층', '우리집 똥간'], en:['Office restroom', 'Accelerator 3F', 'Home loo'], ja:['会社のトイレ', '加速器3階', 'うちのトイレ'], zh:['公司厕所', '加速器3楼', '我家厕所']};
-  var rn = rooms[state.lang] || rooms.ko;
-  api('POST', '/api/demo', {name:pool[Math.floor(Math.random() * pool.length)], roomName:rn[0], roomNames:rn})
-    .then(function(s){ afterLogin(s, true); }, function(e){
-      var er = document.getElementById('auth-err'); if(er) er.textContent = errText(e);
-      busy(el, false);
-    });
-}
 /* Auth backend. With Supabase, set window.POO_AUTH = {signUp, signIn, resetPassword}
    (each returns a Promise). signUp/signIn resolve to the app state ({user, rooms, ...})
    or to {needsConfirm:true}; reject with an Error whose .code is one of the err.* keys. */
@@ -4607,7 +4593,6 @@ function copyText(s){
 
 function handleAction(a, el){
   switch(a){
-    case 'demo': demoLogin(el); break;
     case 'authSwitch': {
       var keepId = (document.getElementById('f-email') || {}).value || '';
       authMode = authMode === 'login' ? 'signup' : 'login';
