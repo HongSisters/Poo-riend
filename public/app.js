@@ -2613,6 +2613,19 @@ HAT_BOOST = {bunny:[1.15, -6], propeller:[1.22, -2], grad:[1.22, -6], cowboy:[1.
         'auth.resend':'重新发送', 'auth.resent':'已重新发送。', 'auth.back':'返回登录'}
   };
   for(var l2 in M) for(var k2 in M[l2]) I18N[l2][k2] = M[l2][k2];
+  var E = {
+    ko:{'auth.pwShow':'비밀번호 보기', 'auth.pwHide':'비밀번호 숨기기', 'err.nick_taken':'이미 쓰는 닉네임이에요.',
+        'err.mail_limit':'메일을 너무 많이 보냈어요. 잠시 뒤에 다시 해 주세요.', 'err.mail_blocked':'이 주소로는 메일을 보낼 수 없어요. 관리자에게 알려 주세요.',
+        'err.signup_off':'지금은 가입을 받지 않아요.'},
+    en:{'auth.pwShow':'Show password', 'auth.pwHide':'Hide password', 'err.nick_taken':'That nickname is taken.',
+        'err.mail_limit':'Too many emails sent. Try again a bit later.', 'err.mail_blocked':'We cannot send mail to this address yet.',
+        'err.signup_off':'Sign-ups are closed right now.'},
+    ja:{'auth.pwShow':'パスワードを表示', 'auth.pwHide':'パスワードを隠す', 'err.nick_taken':'そのニックネームは使用中。',
+        'err.mail_limit':'メールの送りすぎ。少し待ってから。', 'err.mail_blocked':'このアドレスにはまだ送れません。', 'err.signup_off':'今は登録を受け付けていません。'},
+    zh:{'auth.pwShow':'显示密码', 'auth.pwHide':'隐藏密码', 'err.nick_taken':'该昵称已被使用。',
+        'err.mail_limit':'邮件发送太频繁，请稍后再试。', 'err.mail_blocked':'暂时无法向该邮箱发送邮件。', 'err.signup_off':'暂不开放注册。'}
+  };
+  for(var l3 in E) for(var k3 in E[l3]) I18N[l3][k3] = E[l3][k3];
   I18N.ko['tab.friends'] = '똥친'; I18N.ko['friends.title'] = '나의 똥 친구';
   I18N.ko['tab.mypoo'] = '똥꾸'; I18N.ko['mypoo.title'] = '내 똥 꾸미기';
 })();
@@ -3061,7 +3074,8 @@ function api(method, url, body){
 function errText(e){
   var k = 'err.' + ((e && e.code) || 'server');
   var s = t(k);
-  return s === k ? t('err.server') : s;
+  if(s !== k && !(e && e.code === 'server' && e.raw)) return s;
+  return (e && e.raw) ? t('err.server') + ' (' + String(e.raw).slice(0, 120) + ')' : t('err.server');
 }
 function applyState(s){
   if(!s || !s.user) return;
@@ -3490,6 +3504,12 @@ function knock(userId, el){
 }
 
 var sentEmail = '', sentPoll = null;
+function iconEye(open){
+  var eye = '<path d="M2.4 12.2 C5.6 7 8.6 5.2 12 5.2 C15.4 5.2 18.4 7 21.6 12 C18.4 17 15.4 18.8 12 18.8 C8.6 18.8 5.6 17 2.4 12.2 Z"/>'
+    + '<path d="M12 9 C13.8 8.9 15 10.3 15 12 C15 13.8 13.7 15.1 12 15 C10.2 15 9 13.7 9 12 C9 10.4 10.3 9.1 12 9 Z"/>';
+  return '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+    + eye + (open ? '' : '<path d="M4 20.2 L20.2 3.8"/>') + '</svg>';
+}
 function viewAuthSent(){
   return '<div class="auth">'
     + '<div class="auth-mark">' + pooSVG({shape:'classic', thick:1}, 104) + '</div>'
@@ -3528,7 +3548,8 @@ function viewAuth(){
     +   '<label class="field"><span class="k">' + t('auth.email') + '</span>'
     +     '<input id="f-email" name="email" type="email" inputmode="email" maxlength="254" autocapitalize="none" autocomplete="' + (su ? 'email' : 'username') + '" spellcheck="false" placeholder="' + t('auth.emailPh') + '"></label>'
     +   '<label class="field"><span class="k">' + t('auth.pw') + '</span>'
-    +     '<input id="f-pw" name="password" type="password" maxlength="72" autocomplete="' + (su ? 'new-password' : 'current-password') + '" placeholder="' + t('auth.pwPh') + '"></label>'
+    +     '<span class="pw-wrap"><input id="f-pw" name="password" type="password" maxlength="72" autocomplete="' + (su ? 'new-password' : 'current-password') + '" placeholder="' + t('auth.pwPh') + '">'
+    +     '<button type="button" class="pw-eye" data-action="pwEye" aria-label="' + esc(t('auth.pwShow')) + '" aria-pressed="false">' + iconEye(false) + '</button></span></label>'
     + (su ? '' : '<button type="button" class="auth-forgot" data-action="forgotPw">' + t('auth.forgot') + '</button>')
     +   '<p class="err" id="auth-err" aria-live="polite"></p>'
     +   '<button class="btn ink wide" type="submit" id="auth-go">' + (su ? t('auth.signup') : t('auth.login')) + '</button>'
@@ -4638,6 +4659,17 @@ function handleAction(a, el){
       break;
     }
     case 'forgotPw': forgotPw(); break;
+    case 'pwEye': {
+      var pin = document.getElementById('f-pw');
+      if(pin){
+        var show = pin.type === 'password';
+        pin.type = show ? 'text' : 'password';
+        el.setAttribute('aria-pressed', show ? 'true' : 'false');
+        el.setAttribute('aria-label', t(show ? 'auth.pwHide' : 'auth.pwShow'));
+        el.innerHTML = iconEye(show);
+      }
+      break;
+    }
     case 'authBack': authMode = 'login'; render(); {
       var fe2 = document.getElementById('f-email'); if(fe2) fe2.value = sentEmail;
     } break;

@@ -262,6 +262,11 @@ begin
   if p_path = '/api/me/name' and p_method = 'PUT' then
     v_name := pr_clean(b->>'name', 10);
     if v_name = '' then return pr_err('bad_name', 400); end if;
+    if exists (select 1 from profiles where lower(nickname) = lower(v_name) and id <> me)
+       or exists (select 1 from auth.users u where u.id <> me and lower(pr_clean(u.raw_user_meta_data->>'name', 10)) = lower(v_name)
+                  and not exists (select 1 from profiles p where p.id = u.id)) then
+      return pr_err('nick_taken', 409);
+    end if;
     update profiles set nickname = v_name where id = me;
     for rid in select room_id from pr_members where user_id = me loop perform pr_sync(rid); end loop;
     return jsonb_build_object('ok', true);
@@ -433,6 +438,15 @@ begin
 
   return pr_err('not_found', 404);
 end $$;
+
+-- nickname already used? (checked before sign-up, so it is open to anon; answers only true/false)
+create or replace function public.pr_nick_taken(n text) returns boolean
+language sql stable security definer set search_path = public as $$
+  select exists (select 1 from profiles where lower(nickname) = lower(pr_clean(n, 10)))
+      or exists (select 1 from auth.users u where lower(pr_clean(u.raw_user_meta_data->>'name', 10)) = lower(pr_clean(n, 10))
+                 and not exists (select 1 from profiles p where p.id = u.id))   -- signed up, mail not opened yet
+$$;
+grant execute on function public.pr_nick_taken(text) to anon, authenticated;
 
 -- only signed-in users may call the API; helper functions stay private
 revoke all on function public.poo_api(text, text, jsonb) from public, anon;
