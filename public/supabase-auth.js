@@ -5,8 +5,8 @@
      <script src="app.js"></script>
    Fill in SUPABASE_URL / SUPABASE_ANON_KEY and loadState(). */
 (function(){
-  var SUPABASE_URL = 'https://YOUR-PROJECT.supabase.co';
-  var SUPABASE_ANON_KEY = 'YOUR-ANON-KEY';
+  var SUPABASE_URL = 'https://jmytbjqipxqklxvkccqh.supabase.co';
+  var SUPABASE_ANON_KEY = 'sb_publishable_cyNibKneWY6-36Ty7iWd2w_18PlLG2A';
   var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   window.sb = sb;
 
