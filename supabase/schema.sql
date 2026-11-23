@@ -9,7 +9,10 @@ create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade
 );
 alter table public.profiles add column if not exists nickname text;
-alter table public.profiles add column if not exists poo jsonb not null default '{"shape":"classic","thick":1,"hat":"beanie"}'::jsonb;
+alter table public.profiles add column if not exists poo jsonb not null default '{"shape":"classic","thick":1,"hat":"none"}'::jsonb;
+alter table public.profiles alter column poo set default '{"shape":"classic","thick":1,"hat":"none"}'::jsonb;
+-- people who never dressed up their poo: take the old default beanie off
+update public.profiles set poo = '{"shape":"classic","thick":1,"hat":"none"}'::jsonb where poo = '{"shape":"classic","thick":1,"hat":"beanie"}'::jsonb;
 alter table public.profiles add column if not exists best integer not null default 0;
 alter table public.profiles add column if not exists last_knock integer;
 alter table public.profiles add column if not exists created_at timestamptz not null default now();
